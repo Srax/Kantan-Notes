@@ -1,20 +1,90 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from "react";
+import { StatusBar } from "expo-status-bar";
+import { NavigationContainer } from "@react-navigation/native";
+import {
+  createStackNavigator,
+  StackNavigationProp,
+} from "@react-navigation/stack";
+import {
+  Button,
+  DefaultTheme,
+  Provider as PaperProvider,
+  Text,
+  TextInput,
+} from "react-native-paper";
+import CustomNavigationBar from "./src/components/CustomNavigationBar";
+import DetailsScreen from "./src/screens/Details.screen";
+import HomeScreen from "./src/screens/Home.screen";
+import NoteBlock from "./src/components/NoteBlock.component";
+import noteController from "./src/controllers/Note.controller";
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+// Define the props interface for CustomNavigationBar
+interface CustomNavigationBarProps {
+  navigation: StackNavigationProp<any, any>; // Adjust the types according to your navigation stack
+  route: any; // Adjust the types according to your navigation stack
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+// Define the theme for PaperProvider
+const theme = {
+  ...DefaultTheme,
+  // Add any custom theme properties here
+};
+
+type IRootStackParamList = {
+  Home: undefined;
+  NoteBlock: { initialTitle: string; initialText: string };
+};
+
+const Stack = createStackNavigator();
+
+export default function App() {
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const init = async () => {
+      try {
+        setIsLoading(true);
+        await noteController.initializeDatabase();
+        console.log("Database initialized");
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error initializing database", error);
+      }
+    };
+    init();
+  }, []);
+
+  return (
+    <PaperProvider theme={theme}>
+      {isLoading ? (
+        <></>
+      ) : (
+        <NavigationContainer>
+          <Stack.Navigator
+            initialRouteName="Home"
+            screenOptions={
+              {
+                // header: (props) => (
+                //   <CustomNavigationBar
+                //     options={undefined}
+                //     {...(props as CustomNavigationBarProps)}
+                //   />
+                // ),
+              }
+            }
+          >
+            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen
+              name="NoteBlock"
+              component={NoteBlock}
+              options={({ navigation }) => ({
+                title: "",
+              })}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      )}
+      <StatusBar style="auto" />
+    </PaperProvider>
+  );
+}
