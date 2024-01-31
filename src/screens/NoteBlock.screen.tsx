@@ -10,7 +10,7 @@ import {
 import { Button, Text, TextInput } from "react-native-paper";
 import { TextInput as RNTextInput } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
-import MyComponent from "./MyComponent";
+import MyComponent from "../components/MyComponent";
 import noteController, { Note } from "../controllers/Note.controller";
 
 const NoteBlock: React.FC = ({ route, navigation }) => {
@@ -33,10 +33,9 @@ const NoteBlock: React.FC = ({ route, navigation }) => {
 
   // useLayoutEffect ensure that our header gets the updated version of our usestates
   useLayoutEffect(() => {
-    const unsubscribe = navigation.addListener("beforeRemove", (e) => {
+    const unsubscribe = navigation.addListener("beforeRemove", () => {
       handleSave();
     });
-
     return unsubscribe; // Cleanup function to remove the listener
   }, [navigation, title, text, note]);
 
@@ -73,15 +72,17 @@ const NoteBlock: React.FC = ({ route, navigation }) => {
           showToast("Empty note discarded");
           return;
         }
-        await noteController.createNote(new Note(1, title, text));
+        let n = new Note(-1, title, text);
+        await noteController.createNote(n);
         showToast("Note created");
         return;
       }
-      const _note = { ...note, title: title, text: text }; // Create a copy to avoid mutation
+      const _note = note;
+      _note.title = title;
+      _note.text = text;
       await noteController.updateNote(_note);
       showToast("Note updated");
     } catch (error) {
-      console.error("Error saving note", error);
       showToast("Something went wrong");
     }
   };

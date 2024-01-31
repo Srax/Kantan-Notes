@@ -1,25 +1,14 @@
 import * as SQLite from "expo-sqlite";
+import Note from "../types/Note.type";
 
-const db = SQLite.openDatabase("notes.db"); // Open or create a database
-
-export class Note {
-  id: number;
-  title: string;
-  text: string;
-
-  constructor(id: number, title: string, text: string) {
-    this.id = id;
-    this.title = title;
-    this.text = text;
-  }
-}
+const db = SQLite.openDatabase("notes.db", "2"); // Open or create a database
 
 const initializeDatabase = (): Promise<void> => {
   return new Promise<void>((resolve, reject) => {
     db.transaction((tx) => {
       // Create notes table if it doesn't exist
       tx.executeSql(
-        "CREATE TABLE IF NOT EXISTS notes (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, text TEXT NOT NULL)",
+        "CREATE TABLE IF NOT EXISTS notes (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, text TEXT NOT NULL, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL)",
         [],
         () => {
           resolve();
@@ -34,11 +23,12 @@ const initializeDatabase = (): Promise<void> => {
 
 // Create
 const createNote = (note: Note): Promise<number> => {
+  const currentTime = Date.now();
   return new Promise<number>((resolve, reject) => {
     db.transaction((tx) => {
       tx.executeSql(
-        "INSERT INTO notes (title, text) VALUES (?, ?)",
-        [note.title, note.text],
+        "INSERT INTO notes (title, text, createdAt, updatedAt) VALUES (?, ?, ?, ?)",
+        [note.title, note.text, currentTime, currentTime],
         (_, { insertId }) => {
           resolve(insertId);
         },
@@ -60,8 +50,20 @@ const getAllNotes = (): Promise<Note[]> => {
           const notes: Note[] =
             rows.length > 0
               ? rows._array.map(
-                  (item: { id: number; title: string; text: string }) =>
-                    new Note(item.id, item.title, item.text)
+                  (item: {
+                    id: number;
+                    title: string;
+                    text: string;
+                    createdAt: number;
+                    updatedAt: number;
+                  }) =>
+                    new Note(
+                      item.id,
+                      item.title,
+                      item.text,
+                      item.createdAt,
+                      item.updatedAt
+                    )
                 )
               : [];
           resolve(notes);
@@ -84,7 +86,13 @@ const getNoteById = (noteId: number): Promise<Note | null> => {
         (_, { rows }) => {
           if (rows.length > 0) {
             const item = rows.item(0);
-            const note = new Note(item.id, item.title, item.text);
+            const note = new Note(
+              item.id,
+              item.title,
+              item.text,
+              item.createdAt,
+              item.updatedAt
+            );
             resolve(note);
           } else {
             resolve(null);
@@ -100,11 +108,12 @@ const getNoteById = (noteId: number): Promise<Note | null> => {
 
 // Update
 const updateNote = (note: Note): Promise<void> => {
+  const currentTime = Date.now();
   return new Promise<void>((resolve, reject) => {
     db.transaction((tx) => {
       tx.executeSql(
-        "UPDATE notes SET title = ?, text = ? WHERE id = ?",
-        [note.title, note.text, note.id],
+        "UPDATE notes SET title = ?, text = ?, updatedAt = ? WHERE id = ?",
+        [note.title, note.text, currentTime, note.id],
         (_, result) => {
           if (result.rowsAffected > 0) {
             resolve();

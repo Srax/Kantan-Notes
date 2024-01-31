@@ -15,8 +15,8 @@ import {
 import CustomNavigationBar from "./src/components/CustomNavigationBar";
 import DetailsScreen from "./src/screens/Details.screen";
 import HomeScreen from "./src/screens/Home.screen";
-import NoteBlock from "./src/components/NoteBlock.component";
 import noteController from "./src/controllers/Note.controller";
+import NoteBlock from "./src/screens/NoteBlock.screen";
 
 // Define the props interface for CustomNavigationBar
 interface CustomNavigationBarProps {
@@ -47,6 +47,7 @@ export default function App() {
         await noteController.initializeDatabase();
         console.log("Database initialized");
         setIsLoading(false);
+        await noteController.getNoteById(1).then((note) => {});
       } catch (error) {
         console.error("Error initializing database", error);
       }

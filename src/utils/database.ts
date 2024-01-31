@@ -4,7 +4,7 @@ import { Asset } from "expo-asset";
 
 export default async function openDatabase(
   pathToDatabaseFile: string
-): Promise<SQLite.WebSQLDatabase> {
+): Promise<SQLite.Database> {
   if (
     !(await FileSystem.getInfoAsync(FileSystem.documentDirectory + "SQLite"))
       .exists

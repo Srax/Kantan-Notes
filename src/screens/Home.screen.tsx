@@ -2,12 +2,10 @@ import React, { useEffect, useState } from "react";
 import { FlatList, Image, StyleSheet, Text, View } from "react-native";
 import { Button, Divider, TextInput } from "react-native-paper";
 import { StackNavigationProp } from "@react-navigation/stack";
-import * as SQLite from "expo-sqlite";
-import openDatabase from "../../database";
-import GridLayout, { Responsive, Layout } from "react-grid-layout";
-import NoteBox from "../components/NoteBox.component";
-import noteController, { Note } from "../controllers/Note.controller";
+import noteController from "../controllers/Note.controller";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import Note from "../types/Note.type";
+import NoteBox from "../components/NoteBox.component";
 
 const HomeScreen: React.FC = ({ route }) => {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -65,7 +63,6 @@ const HomeScreen: React.FC = ({ route }) => {
 
   return (
     <View style={styles.container}>
-      <Text>Home</Text>
       <Button
         onPress={() =>
           nav.navigate("NoteBlock", {
@@ -79,8 +76,7 @@ const HomeScreen: React.FC = ({ route }) => {
       <Divider />
       <View style={styles.noteList}>
         {notes.map((note) => (
-          // <Text>{note.title}</Text>
-          <NoteBox key={note.id} note={note} />
+          <NoteBox key={note.getId()} note={note} />
         ))}
       </View>
     </View>
@@ -90,6 +86,7 @@ const HomeScreen: React.FC = ({ route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: "2%",
   },
   noteList: {},
 });
