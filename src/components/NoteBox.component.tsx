@@ -1,10 +1,11 @@
 import React, { useEffect } from "react";
 import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { Text } from "react-native-paper";
+import { Avatar, Button, Card, Text, useTheme } from "react-native-paper";
 
 const NoteBox = ({ note }) => {
   const nav = useNavigation();
+  const theme = useTheme();
 
   const handleClick = () => {
     nav.navigate("NoteBlock", {
@@ -13,29 +14,22 @@ const NoteBox = ({ note }) => {
   };
 
   return (
-    <TouchableOpacity onPress={handleClick}>
-      <View style={styles.noteBox}>
-        {note.getTitle() && (
-          <Text variant="titleMedium">{note.getTitle()}</Text>
-        )}
-        <Text>{note.getText()}</Text>
-      </View>
-    </TouchableOpacity>
-    // <TouchableOpacity onPress={handleClick}>
-    //   <View style={styles.noteBox}>
-    //     <Text>{note.text}</Text>
-    //   </View>
-    // </TouchableOpacity>
+    <Card onPress={handleClick} style={styles.noteBox}>
+      <Card.Title
+        title={note.getTitle()}
+        subtitle={note.getText()}
+        titleVariant={"titleMedium"}
+        subtitleNumberOfLines={5}
+      />
+    </Card>
   );
 };
 
 const styles = StyleSheet.create({
   noteBox: {
-    // Add your desired styling for the note box
-    borderWidth: 1,
     padding: 6,
-    marginBottom: 10,
-    marginTop: 10,
+    marginBottom: 6,
+    marginTop: 6,
   },
 });
 

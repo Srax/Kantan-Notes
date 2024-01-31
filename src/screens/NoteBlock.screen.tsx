@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { View, StyleSheet, ToastAndroid } from "react-native";
 import {
-  View,
-  StyleSheet,
-  Pressable,
-  TouchableOpacity,
-  Alert,
-  ToastAndroid,
-} from "react-native";
-import { Button, Text, TextInput } from "react-native-paper";
+  Appbar,
+  Button,
+  Dialog,
+  Portal,
+  Text,
+  TextInput,
+} from "react-native-paper";
 import { TextInput as RNTextInput } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
-import MyComponent from "../components/MyComponent";
 import noteController from "../controllers/Note.controller";
 import Note from "../types/Note.type";
 
@@ -18,29 +17,31 @@ const NoteBlock: React.FC = ({ route, navigation }) => {
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [note, setNote] = useState<Note | null>(null);
+  const [visible, setVisible] = React.useState(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
+  const hideDialog = () => setVisible(false);
 
   const titleInputRef = useRef<RNTextInput>(null);
   const textInputRef = useRef<RNTextInput>(null);
 
-  // useLayoutEffect(() => {
-  //   navigation.setOptions({
-  //     headerRight: () => (
-  //       <Button onPress={() => handleSave()}>
-  //         {note ? "Update" : "Create"}
-  //       </Button>
-  //     ),
-  //   });
-  // }, [navigation, title, text, note]);
+  const { noteId, autoFocus } = route.params;
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Appbar.Action icon="delete" onPress={() => setVisible(true)} />
+      ),
+    });
+  }, [navigation, title, text, note, isDeleting]);
 
   // useLayoutEffect ensure that our header gets the updated version of our usestates
   useLayoutEffect(() => {
     const unsubscribe = navigation.addListener("beforeRemove", () => {
-      handleSave();
+      if (!isDeleting) handleSave();
     });
     return unsubscribe; // Cleanup function to remove the listener
-  }, [navigation, title, text, note]);
-
-  const { noteId } = route.params;
+  }, [navigation, title, text, note, isDeleting]);
 
   const showToast = (text: string) => {
     ToastAndroid.show(text, ToastAndroid.SHORT);
@@ -66,13 +67,29 @@ const NoteBlock: React.FC = ({ route, navigation }) => {
     init();
   }, []);
 
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true);
+      const noteExists = await noteController.recordExists(noteId);
+      if (noteExists) {
+        await noteController.deleteNote(noteId);
+      }
+      showToast("Note deleted");
+      hideDialog();
+      navigation.navigate("Home");
+    } catch (error) {
+      console.error(error);
+      showToast("Something went wrong");
+    }
+  };
+
   const handleSave = async () => {
     try {
+      if (!title && !text) {
+        showToast("Empty note discarded");
+        return;
+      }
       if (!note) {
-        if (!title && !text) {
-          showToast("Empty note discarded");
-          return;
-        }
         let n = new Note(-1, title, text, 0, 0);
         await noteController.createNote(n);
         showToast("Note created");
@@ -83,7 +100,9 @@ const NoteBlock: React.FC = ({ route, navigation }) => {
       _note.setText(text);
       await noteController.updateNote(_note);
       showToast("Note updated");
+      return;
     } catch (error) {
+      console.error(error);
       showToast("Something went wrong");
     }
   };
@@ -113,7 +132,7 @@ const NoteBlock: React.FC = ({ route, navigation }) => {
           placeholder="Note"
           value={text}
           ref={textInputRef}
-          autoFocus={true}
+          autoFocus={autoFocus || false}
           multiline
           onChangeText={(txt) => {
             setText(txt);
@@ -123,8 +142,24 @@ const NoteBlock: React.FC = ({ route, navigation }) => {
           activeUnderlineColor={"transparent"}
           cursorColor="black"
         />
+        <Portal>
+          <Dialog visible={visible} onDismiss={hideDialog}>
+            <Dialog.Icon icon="alert" />
+            <Dialog.Title style={styles.dialogTitle}>Delete note</Dialog.Title>
+            <Dialog.Content>
+              <Text variant="bodyMedium" style={styles.dialogContentText}>
+                Are you sure you wish to delete this note?
+              </Text>
+            </Dialog.Content>
+            <Dialog.Actions style={styles.dialogActions}>
+              <Button onPress={hideDialog}>Cancel</Button>
+              <Button onPress={handleDelete} textColor="red">
+                Delete
+              </Button>
+            </Dialog.Actions>
+          </Dialog>
+        </Portal>
       </ScrollView>
-      <MyComponent />
     </View>
   );
 };
@@ -148,6 +183,14 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     fontSize: 24,
   },
+  dialogTitle: {
+    textAlign: "center",
+    fontSize: 18,
+  },
+  dialogContentText: {
+    textAlign: "center",
+  },
+  dialogActions: {},
 });
 
 export default NoteBlock;

@@ -28,7 +28,7 @@ const createNote = (note: Note): Promise<number> => {
     db.transaction((tx) => {
       tx.executeSql(
         "INSERT INTO notes (title, text, createdAt, updatedAt) VALUES (?, ?, ?, ?)",
-        [note.title, note.text, currentTime, currentTime],
+        [note.getTitle(), note.getText(), currentTime, currentTime],
         (_, { insertId }) => {
           resolve(insertId);
         },
@@ -113,7 +113,7 @@ const updateNote = (note: Note): Promise<void> => {
     db.transaction((tx) => {
       tx.executeSql(
         "UPDATE notes SET title = ?, text = ?, updatedAt = ? WHERE id = ?",
-        [note.title, note.text, currentTime, note.id],
+        [note.getTitle(), note.getText(), currentTime, note.getId()],
         (_, result) => {
           if (result.rowsAffected > 0) {
             resolve();
@@ -151,6 +151,27 @@ const deleteNote = (noteId: number): Promise<void> => {
   });
 };
 
+const recordExists = (noteId: number): Promise<boolean> => {
+  return new Promise<boolean>((resolve, reject) => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "SELECT * FROM notes WHERE id = ?",
+        [noteId],
+        (_, { rows }) => {
+          if (rows.length > 0) {
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+        },
+        (_, error: any) => {
+          reject(error);
+        }
+      );
+    });
+  });
+};
+
 const purgeDatabase = (): Promise<void> => {
   return new Promise<void>((resolve, reject) => {
     db.transaction((tx) => {
@@ -176,6 +197,7 @@ const noteController = {
   deleteNote,
   initializeDatabase,
   purgeDatabase,
+  recordExists,
 };
 
 export default noteController;
