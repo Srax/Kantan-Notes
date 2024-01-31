@@ -8,17 +8,17 @@ const NoteBox = ({ note }) => {
 
   const handleClick = () => {
     nav.navigate("NoteBlock", {
-      noteId: note.id as number,
+      noteId: note.getId() as number,
     });
   };
 
   return (
     <TouchableOpacity onPress={handleClick}>
       <View style={styles.noteBox}>
-        {note.title && <Text variant="titleMedium">{note.title}</Text>}
-        <Text>
-          {note.id} - {note.text}
-        </Text>
+        {note.getTitle() && (
+          <Text variant="titleMedium">{note.getTitle()}</Text>
+        )}
+        <Text>{note.getText()}</Text>
       </View>
     </TouchableOpacity>
     // <TouchableOpacity onPress={handleClick}>

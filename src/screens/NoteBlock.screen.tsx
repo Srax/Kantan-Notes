@@ -11,7 +11,8 @@ import { Button, Text, TextInput } from "react-native-paper";
 import { TextInput as RNTextInput } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import MyComponent from "../components/MyComponent";
-import noteController, { Note } from "../controllers/Note.controller";
+import noteController from "../controllers/Note.controller";
+import Note from "../types/Note.type";
 
 const NoteBlock: React.FC = ({ route, navigation }) => {
   const [title, setTitle] = useState("");
@@ -56,8 +57,8 @@ const NoteBlock: React.FC = ({ route, navigation }) => {
       if (noteId) {
         const fet = await noteController.getNoteById(noteId);
         if (fet != null) {
-          setTitle(fet.title);
-          setText(fet.text);
+          setTitle(fet.getTitle());
+          setText(fet.getText());
           setNote(fet);
         }
       }
@@ -72,14 +73,14 @@ const NoteBlock: React.FC = ({ route, navigation }) => {
           showToast("Empty note discarded");
           return;
         }
-        let n = new Note(-1, title, text);
+        let n = new Note(-1, title, text, 0, 0);
         await noteController.createNote(n);
         showToast("Note created");
         return;
       }
-      const _note = note;
-      _note.title = title;
-      _note.text = text;
+      const _note: Note = note;
+      _note.setTitle(title);
+      _note.setText(text);
       await noteController.updateNote(_note);
       showToast("Note updated");
     } catch (error) {
