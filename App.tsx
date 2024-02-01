@@ -38,7 +38,7 @@ const Stack = createStackNavigator();
 
 export default function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [showAgreement, setShowAgreement] = useState(false);
+  const [showAgreement, setShowAgreement] = useState(true);
 
   const init = async () => {
     try {
@@ -56,7 +56,7 @@ export default function App() {
   }, []);
 
   const checkAgreement = async () => {
-    const hasAccepted = await AsyncStorage.getItem("agreementAccepted");
+    const hasAccepted = await AsyncStorage.getItem("v1/agreementAccepted");
     setShowAgreement(hasAccepted !== "true");
   };
 
@@ -69,7 +69,7 @@ export default function App() {
       ) : (
         <NavigationContainer>
           <Stack.Navigator
-            initialRouteName="Home"
+            initialRouteName={showAgreement ? "Agreement" : "Home"}
             screenOptions={{
               title: "Notes",
               // header: (props) => (
@@ -84,11 +84,12 @@ export default function App() {
               <Stack.Screen
                 name="Agreement"
                 component={AgreementScreen}
-                options={{ headerShown: false }}
+                options={{ headerShown: false, gestureEnabled: false }}
               />
             ) : (
-              <Stack.Screen name="Home" component={HomeScreen} />
+              <></>
             )}
+            <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen
               name="NoteBlock"
               component={NoteBlock}
