@@ -47,7 +47,6 @@ export default function App() {
         await noteController.initializeDatabase();
         console.log("Database initialized");
         setIsLoading(false);
-        await noteController.getNoteById(1).then((note) => {});
       } catch (error) {
         console.error("Error initializing database", error);
       }
@@ -63,16 +62,15 @@ export default function App() {
         <NavigationContainer>
           <Stack.Navigator
             initialRouteName="Home"
-            screenOptions={
-              {
-                // header: (props) => (
-                //   <CustomNavigationBar
-                //     options={undefined}
-                //     {...(props as CustomNavigationBarProps)}
-                //   />
-                // ),
-              }
-            }
+            screenOptions={{
+              title: "Kantan Notes",
+              // header: (props) => (
+              //   <CustomNavigationBar
+              //     options={undefined}
+              //     {...(props as CustomNavigationBarProps)}
+              //   />
+              // ),
+            }}
           >
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen

@@ -27,6 +27,7 @@ const NoteBox = ({ note }) => {
 
 const styles = StyleSheet.create({
   noteBox: {
+    backgroundColor: "#ffffff",
     padding: 6,
     marginBottom: 6,
     marginTop: 6,
