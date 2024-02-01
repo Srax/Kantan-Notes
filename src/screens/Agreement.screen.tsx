@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
-import React, { useState } from "react";
+import React, { useLayoutEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Button, Text } from "react-native-paper";
 import * as Linking from "expo-linking";
@@ -10,7 +10,7 @@ const AgreementScreen = ({ navigation }) => {
   const [accepted, setAccepted] = useState(false);
 
   const handleAccept = async () => {
-    await AsyncStorage.setItem("agreementAccepted", "true");
+    await AsyncStorage.setItem("v1/agreementAccepted", "true");
     setAccepted(true);
     navigation.navigate("Home");
   };
