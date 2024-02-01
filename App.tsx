@@ -17,6 +17,9 @@ import DetailsScreen from "./src/screens/Details.screen";
 import HomeScreen from "./src/screens/Home.screen";
 import noteController from "./src/controllers/Note.controller";
 import NoteBlock from "./src/screens/NoteBlock.screen";
+import Cipher from "./src/helpers/encryption/cipher";
+import SecureStore from "./src/helpers/encryption/store";
+import { View } from "react-native";
 
 // Define the props interface for CustomNavigationBar
 interface CustomNavigationBarProps {
@@ -45,10 +48,9 @@ export default function App() {
       try {
         setIsLoading(true);
         await noteController.initializeDatabase();
-        console.log("Database initialized");
         setIsLoading(false);
       } catch (error) {
-        console.error("Error initializing database", error);
+        console.error("Error initializing", error);
       }
     };
     init();
@@ -57,7 +59,9 @@ export default function App() {
   return (
     <PaperProvider theme={theme}>
       {isLoading ? (
-        <></>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        ></View>
       ) : (
         <NavigationContainer>
           <Stack.Navigator
