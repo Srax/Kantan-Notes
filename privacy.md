@@ -47,4 +47,4 @@ We may update our Privacy Policy from time to time. We will notify you of any ch
 If you have any questions about this Privacy Policy, please contact us at kantan-notes@srax.dev
 
 <hr/>
-<small>This Privacy Policy was last updated on Feburary 1, 2024 (Version 1.0).</small>
+<small>This Privacy Policy was last updated on February 1, 2024 (Version 1.0).</small>

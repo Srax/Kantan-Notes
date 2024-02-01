@@ -48,4 +48,4 @@ If you have any questions about these Terms, please contact us at kantan-notes@s
 Your use of Kantan Notes is also subject to <a href="https://play.google.com/intl/en-US_us/about/play-terms/index.html">Google Play's Terms of Service</a> and the <a href="https://expo.dev/terms">Expo's Terms of Service</a>
 
 <hr/>
-<small>This Terms & Conditions was last updated on Feburary 1, 2024 (Version 1.0).</small>
+<small>This Terms & Conditions was last updated on February 1, 2024 (Version 1.0).</small>
