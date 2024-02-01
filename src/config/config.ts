@@ -1,7 +1,9 @@
 const config = {
   url: {
-    privacyPolicy: "https://google.com",
-    termsAnConditions: "https://google.com",
+    privacyPolicy:
+      "https://github.com/Srax/Kantan-Notes/blob/master/privacy.md",
+    termsAnConditions:
+      "https://github.com/Srax/Kantan-Notes/blob/master/terms-and-conditions.md",
   },
 };
 
