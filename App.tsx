@@ -6,20 +6,16 @@ import {
   StackNavigationProp,
 } from "@react-navigation/stack";
 import {
-  Button,
   DefaultTheme,
   Provider as PaperProvider,
   Text,
-  TextInput,
 } from "react-native-paper";
-import CustomNavigationBar from "./src/components/CustomNavigationBar";
-import DetailsScreen from "./src/screens/Details.screen";
 import HomeScreen from "./src/screens/Home.screen";
 import noteController from "./src/controllers/Note.controller";
 import NoteBlock from "./src/screens/NoteBlock.screen";
-import Cipher from "./src/helpers/encryption/cipher";
-import SecureStore from "./src/helpers/encryption/store";
 import { View } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import AgreementScreen from "./src/screens/Agreement.screen";
 
 // Define the props interface for CustomNavigationBar
 interface CustomNavigationBarProps {
@@ -42,19 +38,27 @@ const Stack = createStackNavigator();
 
 export default function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [showAgreement, setShowAgreement] = useState(false);
+
+  const init = async () => {
+    try {
+      await checkAgreement();
+      setIsLoading(true);
+      await noteController.initializeDatabase();
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error initializing", error);
+    }
+  };
 
   useEffect(() => {
-    const init = async () => {
-      try {
-        setIsLoading(true);
-        await noteController.initializeDatabase();
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error initializing", error);
-      }
-    };
     init();
   }, []);
+
+  const checkAgreement = async () => {
+    const hasAccepted = await AsyncStorage.getItem("agreementAccepted");
+    setShowAgreement(hasAccepted !== "true");
+  };
 
   return (
     <PaperProvider theme={theme}>
@@ -67,7 +71,7 @@ export default function App() {
           <Stack.Navigator
             initialRouteName="Home"
             screenOptions={{
-              title: "Kantan Notes",
+              title: "Notes",
               // header: (props) => (
               //   <CustomNavigationBar
               //     options={undefined}
@@ -76,13 +80,28 @@ export default function App() {
               // ),
             }}
           >
-            <Stack.Screen name="Home" component={HomeScreen} />
+            {showAgreement ? (
+              <Stack.Screen
+                name="Agreement"
+                component={AgreementScreen}
+                options={{ headerShown: false }}
+              />
+            ) : (
+              <Stack.Screen name="Home" component={HomeScreen} />
+            )}
             <Stack.Screen
               name="NoteBlock"
               component={NoteBlock}
               options={({ navigation }) => ({
                 title: "",
               })}
+            />
+            <Stack.Screen
+              name="FirstTime"
+              component={HomeScreen}
+              options={{
+                headerShown: false,
+              }}
             />
           </Stack.Navigator>
         </NavigationContainer>

@@ -1,8 +1,7 @@
 import * as SQLite from "expo-sqlite";
 import Note from "../types/Note.type";
 import Cipher from "../helpers/encryption/cipher";
-
-const db = SQLite.openDatabase("notes.db", "2"); // Open or create a database
+const db = SQLite.openDatabase("notes.db"); // Open or create a database
 
 const initializeDatabase = (): Promise<void> => {
   return new Promise<void>((resolve, reject) => {

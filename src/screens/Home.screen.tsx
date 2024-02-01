@@ -7,6 +7,8 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import Note from "../types/Note.type";
 import NoteBox from "../components/NoteBox.component";
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 const HomeScreen: React.FC = ({ route }) => {
   const [notes, setNotes] = useState<Note[]>([]);
   const nav = useNavigation();
