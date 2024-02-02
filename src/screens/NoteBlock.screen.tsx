@@ -12,8 +12,15 @@ import { TextInput as RNTextInput } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import noteController from "../controllers/Note.controller";
 import Note from "../types/Note.type";
+import { NavigationProp, RouteProp } from "@react-navigation/native";
+import { RootStackParamList } from "../types/Routes.type";
 
-const NoteBlock: React.FC = ({ route, navigation }) => {
+type NoteBlockProps = {
+  route: RouteProp<RootStackParamList, "NoteBlock">; // Use RouteProp with RootStackParamList
+  navigation: NavigationProp<RootStackParamList, "NoteBlock">;
+};
+
+const NoteBlock: React.FC<NoteBlockProps> = ({ route, navigation }) => {
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [note, setNote] = useState<Note | null>(null);
@@ -70,11 +77,13 @@ const NoteBlock: React.FC = ({ route, navigation }) => {
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
-      const noteExists = await noteController.recordExists(noteId);
-      if (noteExists) {
-        await noteController.deleteNote(noteId);
+      if (noteId != null) {
+        const noteExists = await noteController.recordExists(noteId);
+        if (noteExists) {
+          await noteController.deleteNote(noteId);
+          showToast("Note deleted");
+        }
       }
-      showToast("Note deleted");
       hideDialog();
       navigation.navigate("Home");
     } catch (error) {

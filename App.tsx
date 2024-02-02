@@ -1,3 +1,4 @@
+import "react-native-gesture-handler";
 import React, { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { NavigationContainer } from "@react-navigation/native";
@@ -13,9 +14,11 @@ import {
 import HomeScreen from "./src/screens/Home.screen";
 import noteController from "./src/controllers/Note.controller";
 import NoteBlock from "./src/screens/NoteBlock.screen";
-import { View } from "react-native";
+import { Image, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AgreementScreen from "./src/screens/Agreement.screen";
+import { RootStackParamList } from "./src/types/Routes.type";
+import * as SplashScreen from "expo-splash-screen";
 
 // Define the props interface for CustomNavigationBar
 interface CustomNavigationBarProps {
@@ -29,25 +32,23 @@ const theme = {
   // Add any custom theme properties here
 };
 
-type IRootStackParamList = {
-  Home: undefined;
-  NoteBlock: { initialTitle: string; initialText: string };
-};
-
-const Stack = createStackNavigator();
+const Stack = createStackNavigator<RootStackParamList>();
 
 export default function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [showAgreement, setShowAgreement] = useState(true);
 
   const init = async () => {
+    setIsLoading(true);
     try {
+      await SplashScreen.preventAutoHideAsync(); // Prevent auto hiding of splash screen
       await checkAgreement();
-      setIsLoading(true);
       await noteController.initializeDatabase();
-      setIsLoading(false);
     } catch (error) {
       console.error("Error initializing", error);
+    } finally {
+      setIsLoading(false);
+      SplashScreen.hideAsync();
     }
   };
 
@@ -60,53 +61,44 @@ export default function App() {
     setShowAgreement(hasAccepted !== "true");
   };
 
+  if (isLoading) {
+    return null; // You can replace this with a custom loading component if needed
+  }
+
   return (
     <PaperProvider theme={theme}>
-      {isLoading ? (
-        <View
-          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-        ></View>
-      ) : (
-        <NavigationContainer>
-          <Stack.Navigator
-            initialRouteName={showAgreement ? "Agreement" : "Home"}
-            screenOptions={{
-              title: "Notes",
-              // header: (props) => (
-              //   <CustomNavigationBar
-              //     options={undefined}
-              //     {...(props as CustomNavigationBarProps)}
-              //   />
-              // ),
-            }}
-          >
-            {showAgreement ? (
-              <Stack.Screen
-                name="Agreement"
-                component={AgreementScreen}
-                options={{ headerShown: false, gestureEnabled: false }}
-              />
-            ) : (
-              <></>
-            )}
-            <Stack.Screen name="Home" component={HomeScreen} />
+      <NavigationContainer>
+        <Stack.Navigator
+          initialRouteName={showAgreement ? "Agreement" : "Home"}
+          screenOptions={{
+            title: "Notes",
+            // header: (props) => (
+            //   <CustomNavigationBar
+            //     options={undefined}
+            //     {...(props as CustomNavigationBarProps)}
+            //   />
+            // ),
+          }}
+        >
+          {showAgreement ? (
             <Stack.Screen
-              name="NoteBlock"
-              component={NoteBlock}
-              options={({ navigation }) => ({
-                title: "",
-              })}
+              name="Agreement"
+              component={AgreementScreen}
+              options={{ headerShown: false, gestureEnabled: false }}
             />
-            <Stack.Screen
-              name="FirstTime"
-              component={HomeScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-          </Stack.Navigator>
-        </NavigationContainer>
-      )}
+          ) : (
+            <></>
+          )}
+          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen
+            name="NoteBlock"
+            component={NoteBlock}
+            options={() => ({
+              title: "",
+            })}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
       <StatusBar style="auto" />
     </PaperProvider>
   );

@@ -1,12 +1,22 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native";
+import {
+  NavigationProp,
+  RouteProp,
+  useNavigation,
+} from "@react-navigation/native";
 import React, { useLayoutEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Button, Text } from "react-native-paper";
 import * as Linking from "expo-linking";
 import config from "../config/config";
+import { RootStackParamList } from "../types/Routes.type";
 
-const AgreementScreen = ({ navigation }) => {
+type AgreementScreenProps = {
+  route: RouteProp<RootStackParamList, "Agreement">;
+  navigation: NavigationProp<RootStackParamList, "Agreement">;
+};
+
+const AgreementScreen: React.FC<AgreementScreenProps> = ({ navigation }) => {
   const [accepted, setAccepted] = useState(false);
 
   const handleAccept = async () => {

@@ -3,7 +3,7 @@
       "appVersionSource": "local"
     },
     "build": {
-      "staging": {
+      "preview": {
         "distribution": "internal",
         "android": {
           "buildType": "apk"
