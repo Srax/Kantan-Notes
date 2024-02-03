@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
-import { View, StyleSheet, ToastAndroid } from "react-native";
+import { View, StyleSheet, ToastAndroid, Keyboard } from "react-native";
 import {
   Appbar,
   Button,
@@ -89,6 +89,8 @@ const NoteBlock: React.FC<NoteBlockProps> = ({ route, navigation }) => {
     } catch (error) {
       console.error(error);
       showToast("Something went wrong");
+    } finally {
+      Keyboard.dismiss();
     }
   };
 
@@ -113,6 +115,8 @@ const NoteBlock: React.FC<NoteBlockProps> = ({ route, navigation }) => {
     } catch (error) {
       console.error(error);
       showToast("Something went wrong");
+    } finally {
+      Keyboard.dismiss();
     }
   };
 

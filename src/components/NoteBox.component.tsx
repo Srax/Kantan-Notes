@@ -24,7 +24,7 @@ const NoteBox: React.FC<NoteBoxProps> = ({
         onLongPress={onLongPress}
         style={styles.noteBox}
         disabled={disabled}
-        delayLongPress={200}
+        delayLongPress={150}
         mode={"outlined"}
         theme={{ colors: { outline: "lightgray" } }}
       >

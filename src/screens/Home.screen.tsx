@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { Appbar } from "react-native-paper";
+import { Appbar, IconButton, Text } from "react-native-paper";
 import { StackNavigationProp } from "@react-navigation/stack";
 import noteController from "../controllers/Note.controller";
 import {
   NavigationProp,
   RouteProp,
   useFocusEffect,
-  useNavigation,
 } from "@react-navigation/native";
 import Note from "../types/Note.type";
 import NoteBox from "../components/NoteBox.component";
@@ -149,6 +148,20 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ route, navigation }) => {
         keyExtractor={(item) => item.getId().toString()}
         renderItem={renderItem}
       />
+      <IconButton
+        style={styles.addButton}
+        icon={"plus"}
+        size={40}
+        mode={"contained-tonal"}
+        onPress={() =>
+          navigation.navigate("NoteBlock", {
+            noteId: undefined,
+            autoFocus: true,
+          })
+        }
+        containerColor="gray"
+        iconColor="#ffffff"
+      />
     </View>
   );
 };
@@ -158,17 +171,11 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: "2%",
   },
-  noteList: {},
-  rowItem: {
-    height: 100,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  text: {
-    color: "white",
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
+  addButton: {
+    position: "absolute",
+    margin: 16,
+    right: 0,
+    bottom: 0,
   },
 });
 
