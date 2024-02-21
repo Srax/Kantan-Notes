@@ -37,7 +37,6 @@ import {
 } from "react-native-pell-rich-editor";
 import { XMath } from "@wxik/core";
 import { InsertLinkModal } from "../helpers/richtext/insertLink";
-import { EmojiView } from "../helpers/richtext/emoji";
 
 export interface INavigation {
   push: (key: any, params?: Record<string, any>) => void;
@@ -56,17 +55,7 @@ const imageList = [
   "https://lp-cms-production.imgix.net/2019-06/d150c8c399f2d41ecf8864b69ddc7a35-mt-fuji.jpg?auto=format&fit=crop&ar=1:1&q=75&w=1200",
   "https://www.state.gov/wp-content/uploads/2019/04/Japan-2107x1406.jpg",
 ];
-const initHTML = `<br/>
-<center><b onclick="_.sendEvent('TitleClick')" id="title" contenteditable="false">Rich Editor</b></center>
-<center>
-<a href="https://github.com/wxik/react-native-rich-editor">React Native</a>
-<span>And</span>
-<a href="https://github.com/wxik/flutter-rich-editor">Flutter</a>
-</center>
-<br/>
-<div><center><img src="${imageList[0]}" onclick="_.sendEvent('ImgClick')" contenteditable="false" height="170px"/></center></div>
-<pre type="javascript"><code>const editor = ReactNative;</code><code>console.log(editor);</code></pre>
-<br/>Click the picture to switch<br/><br/>
+const initHTML = `
 `;
 
 function createContentStyle(theme: ColorSchemeName) {
@@ -87,22 +76,24 @@ function createContentStyle(theme: ColorSchemeName) {
   return contentStyle;
 }
 
-export function Example(props: IProps) {
+export function RichEditorScreen(props: IProps) {
   const { theme: initTheme = Appearance.getColorScheme(), navigation } = props;
   const richText = useRef<RichEditor>(null);
   const linkModal = useRef<RefLinkModal>();
   const scrollRef = useRef<ScrollView>(null);
+
   // save on html
   const contentRef = useRef(initHTML);
 
   const [theme, setTheme] = useState(initTheme);
-  const [emojiVisible, setEmojiVisible] = useState(false);
   const [disabled, setDisable] = useState(false);
   const contentStyle = useMemo(() => createContentStyle(theme), [theme]);
 
   // on save to preview
   const handleSave = useCallback(() => {
-    navigation.push("preview", {
+    console.log(contentRef.current);
+    console.log(getContentCSS());
+    navigation.push("Preview", {
       html: contentRef.current,
       css: getContentCSS(),
     });
@@ -143,24 +134,13 @@ export function Example(props: IProps) {
   const onKeyHide = useCallback(() => {}, []);
 
   const onKeyShow = useCallback(() => {
-    TextInput.State.currentlyFocusedInput() && setEmojiVisible(false);
+    TextInput.State.currentlyFocusedInput();
   }, []);
 
   // editor height change
   const handleHeightChange = useCallback((height: number) => {
     console.log("editor height change:", height);
   }, []);
-
-  const handleInsertEmoji = useCallback((emoji: string) => {
-    richText.current?.insertText(emoji);
-    richText.current?.blurContentEditor();
-  }, []);
-
-  const handleEmoji = useCallback(() => {
-    Keyboard.dismiss();
-    richText.current?.blurContentEditor();
-    setEmojiVisible(!emojiVisible);
-  }, [emojiVisible]);
 
   const handleInsertVideo = useCallback(() => {
     richText.current?.insertVideo(
@@ -205,6 +185,7 @@ export function Example(props: IProps) {
   );
 
   const handleFontSize = useCallback(() => {
+    console.log("font");
     // 1=  10px, 2 = 13px, 3 = 16px, 4 = 18px, 5 = 24px, 6 = 32px, 7 = 48px;
     let size = [1, 2, 3, 4, 5, 6, 7];
     richText.current?.setFontSize(
@@ -292,13 +273,13 @@ export function Example(props: IProps) {
   return (
     <SafeAreaView style={[styles.container, dark && styles.darkBack]}>
       <StatusBar barStyle={!dark ? "dark-content" : "light-content"} />
-      {/* <InsertLinkModal
+      <InsertLinkModal
         placeholderColor={placeholderColor}
         color={color}
         backgroundColor={backgroundColor}
         onDone={onLinkDone}
         forwardRef={linkModal}
-      /> */}
+      />
       <View style={styles.nav}>
         <Button title={"HOME"} onPress={handleHome} />
         <Button title="Preview" onPress={handleSave} />
@@ -322,6 +303,7 @@ export function Example(props: IProps) {
         />
         <RichEditor
           // initialFocus={true}
+
           initialFocus={false}
           firstFocusEnd={false}
           disabled={disabled}
@@ -369,7 +351,7 @@ export function Example(props: IProps) {
             actions.insertVideo,
             actions.insertImage,
             actions.setStrikethrough,
-            // actions.checkboxList,
+            actions.checkboxList,
             actions.insertOrderedList,
             actions.blockquote,
             actions.alignLeft,
@@ -382,12 +364,11 @@ export function Example(props: IProps) {
             actions.hiliteColor,
             actions.heading1,
             actions.heading4,
-            "insertEmoji",
             "insertHTML",
             "fontSize",
+            "customAction",
           ]} // default defaultActions
           iconMap={{
-            insertEmoji: "",
             [actions.foreColor]: () => (
               <Text style={[styles.tib, { color: "blue" }]}>FC</Text>
             ),
@@ -409,14 +390,12 @@ export function Example(props: IProps) {
             ),
             insertHTML: "",
           }}
-          insertEmoji={handleEmoji}
           insertHTML={handleInsertHTML}
           insertVideo={handleInsertVideo}
           fontSize={handleFontSize}
           foreColor={handleForeColor}
           hiliteColor={handleHaliteColor}
         />
-        {/* {emojiVisible && <EmojiView onSelect={handleInsertEmoji} />} */}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

@@ -20,11 +20,15 @@ import AgreementScreen from "./src/screens/Agreement.screen";
 import { RootStackParamList } from "./src/types/Routes.type";
 import * as SplashScreen from "expo-splash-screen";
 
-// Define the props interface for CustomNavigationBar
-interface CustomNavigationBarProps {
-  navigation: StackNavigationProp<any, any>; // Adjust the types according to your navigation stack
-  route: any; // Adjust the types according to your navigation stack
-}
+import RichTextEditorTest from "./src/screens/Rich.screen";
+import { RichEditorScreen } from "./src/screens/RichTextEditor";
+import { Preview } from "./src/screens/Preview.screen";
+
+import {
+  FontAwesome,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from "@expo/vector-icons";
 
 // Define the theme for PaperProvider
 const theme = {
@@ -69,7 +73,7 @@ export default function App() {
     <PaperProvider theme={theme}>
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName={showAgreement ? "Agreement" : "Home"}
+          initialRouteName={showAgreement ? "Agreement" : "Rich"}
           screenOptions={{
             title: "Notes",
             // header: (props) => (
@@ -97,6 +101,9 @@ export default function App() {
               title: "",
             })}
           />
+          <Stack.Screen name="Rich" component={RichEditorScreen} />
+          <Stack.Screen name="Preview" component={Preview} />
+          {/* <Stack.Screen name="Rich" component={RichTextEditorTest} /> */}
         </Stack.Navigator>
       </NavigationContainer>
       <StatusBar style="auto" />
