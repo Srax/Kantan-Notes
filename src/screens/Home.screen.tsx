@@ -20,6 +20,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { RootStackParamList } from "../types/Routes.type";
 import Searchbar from "../components/SearchBar.component";
 import CustomHeader from "../components/CustomHeader.component";
+import RichNote from "../types/Note.type";
+import richNoteController from "../controllers/Note.controller";
+
+import { convert } from "html-to-text";
+import RoundIconButton from "../components/buttons/RoundIconButton";
 
 type HomeScreenProps = {
   route: RouteProp<RootStackParamList, "Home">;
@@ -27,30 +32,26 @@ type HomeScreenProps = {
 };
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ route, navigation }) => {
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [notes, setNotes] = useState<RichNote[]>([]);
+
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
+  const [filteredNotes, setFilteredNotes] = useState<RichNote[]>([]);
 
   // Filter notes based on search query
   useEffect(() => {
     setFilteredNotes(
-      notes.filter((note: Note) => {
-        const titleMatch = note
-          .getTitle()
-          ?.toLowerCase()
+      notes.filter((note: RichNote) => {
+        let contentMatch = convert(note.getContent())
+          .toLowerCase()
           .includes(searchQuery.toLowerCase());
-        const textMatch = note
-          .getText()
-          ?.toLowerCase()
-          .includes(searchQuery.toLowerCase());
-        return titleMatch || textMatch;
+        return contentMatch;
       })
     );
   }, [notes, searchQuery]);
 
   const fetchNotes = async () => {
     const storedOrder = await retrieveNoteOrder();
-    const fetchedNotes = await noteController.getAllNotes();
+    const fetchedNotes = await richNoteController.getAllNotes();
     if (storedOrder.length > 0) {
       const reorderedNotes = fetchedNotes.sort((a, b) => {
         const positionA = storedOrder.indexOf(String(a.getId()));
@@ -72,8 +73,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ route, navigation }) => {
     }
   };
 
-  const onDragEnd = ({ data }: { data: Note[] }) => {
-    const newNoteOrder = data.map((note: Note) => String(note.getId()));
+  const onDragEnd = ({ data }: { data: RichNote[] }) => {
+    const newNoteOrder = data.map((note: RichNote) => String(note.getId()));
     storeNoteOrder(newNoteOrder);
     setNotes(data);
   };
@@ -92,9 +93,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ route, navigation }) => {
     }
   };
 
-  const renderItem = ({ item, drag, isActive }: RenderItemParams<Note>) => {
+  const renderItem = ({ item, drag, isActive }: RenderItemParams<RichNote>) => {
     const handleClick = () => {
-      navigation.navigate("NoteBlock", {
+      navigation.navigate("Preview", {
         noteId: item.getId() as number,
       });
     };
@@ -148,19 +149,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ route, navigation }) => {
         keyExtractor={(item) => item.getId().toString()}
         renderItem={renderItem}
       />
-      <IconButton
-        style={styles.addButton}
+      <RoundIconButton
         icon={"plus"}
-        size={40}
-        mode={"contained-tonal"}
         onPress={() =>
-          navigation.navigate("NoteBlock", {
+          navigation.navigate("Edit", {
             noteId: undefined,
             autoFocus: true,
           })
         }
-        containerColor="gray"
-        iconColor="#ffffff"
       />
     </View>
   );
@@ -170,12 +166,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: "2%",
-  },
-  addButton: {
-    position: "absolute",
-    margin: 16,
-    right: 0,
-    bottom: 0,
   },
 });
 

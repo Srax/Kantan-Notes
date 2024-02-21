@@ -1,5 +1,11 @@
 import { XMath } from "@wxik/core";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   FlatList,
   SafeAreaView,
@@ -7,20 +13,28 @@ import {
   TextInput,
   Button,
   Keyboard,
+  View,
+  ToastAndroid,
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
-import { IconButton } from "react-native-paper";
+import { Appbar, IconButton } from "react-native-paper";
 import {
   FONT_SIZE,
   IconRecord,
   RichEditor,
   RichToolbar,
   actions,
+  getContentCSS,
 } from "react-native-pell-rich-editor";
 import { IconSource } from "react-native-paper/lib/typescript/components/Icon";
 import ColorPickerModal from "../components/modals/ColorPickerModal.component";
 import Modal from "../components/modals/Modal.component";
 import WebView from "react-native-webview";
+
+import { RootStackParamList } from "../types/Routes.type";
+import { NavigationProp, RouteProp } from "@react-navigation/native";
+import RichNote from "../types/Note.type";
+import richNoteController from "../controllers/Note.controller";
 
 enum ToolBars {
   default,
@@ -33,17 +47,38 @@ interface MenuIconProps {
   color?: string;
 }
 
+interface IProps {
+  route: RouteProp<RootStackParamList, "Edit">;
+  navigation: NavigationProp<RootStackParamList, "Edit">;
+}
+
 const MenuIcon: React.FC<MenuIconProps> = ({ icon, size, color }) => {
   return <IconButton icon={icon} size={size || 20} iconColor={color} />;
 };
 
-const INITIAL_CONTENT = "<p>Start writing your awesome content here!</p>";
-
-const RichTextEditorTest = () => {
-  const [content, setContent] = useState(INITIAL_CONTENT);
+const Editor: React.FC<IProps> = ({ route, navigation }) => {
+  const [content, setContent] = useState("");
   const [currentToolBar, setCurrentToolBar] = useState<ToolBars>(
     ToolBars.default
   );
+  const [note, setNote] = useState<RichNote | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { noteId, autoFocus } = route.params;
+
+  useEffect(() => {
+    async function init() {
+      setIsLoading(true);
+      if (noteId) {
+        const fetched = await richNoteController.getNoteById(noteId);
+        if (fetched) {
+          setNote(fetched);
+          setContent(fetched.getContent());
+        }
+      }
+      setIsLoading(false);
+    }
+    init();
+  }, []);
 
   const [colorPickerModalVisible, setColorPickerModalVisible] =
     useState<boolean>(false);
@@ -63,15 +98,10 @@ const RichTextEditorTest = () => {
     closeColorPickerModal(); // Close the modal after selecting the color
   };
 
-  useEffect(() => {
-    console.log("asdasdadad", selectedColor);
-  }, [selectedColor]);
-
   const scrollRef = useRef<ScrollView>(null);
   const editor = useRef<RichEditor>(null);
 
   const onKeyHide = useCallback(() => {}, []);
-
   const onKeyShow = useCallback(() => {
     TextInput.State.currentlyFocusedInput();
   }, []);
@@ -86,43 +116,62 @@ const RichTextEditorTest = () => {
     };
   }, [onKeyHide, onKeyShow]);
 
-  // const fontSizeOptions = [
-  //   { label: "H1", size: FONT_SIZE.H1 },
-  //   { label: "H2", size: FONT_SIZE.H2 },
-  //   { label: "Aa", size: FONT_SIZE.P }, // Assuming FONT_SIZE.P is the default paragraph size
-  // ];
+  const showToast = (text: string) => {
+    ToastAndroid.show(text, ToastAndroid.SHORT);
+  };
 
   const handleContentChange = (html: any) => {
-    const linkRegex = /((http|https):\/\/[^\s]+)/g;
-
-    // Replace links with hyperlinks in the Rich Text Editor
-    const updatedContent = html.replace(
-      linkRegex,
-      '<a href="$1" style="color: blue; text-decoration: underline;" target="_blank">$1</a>'
-    );
-
-    setContent(updatedContent);
+    setContent(html);
   };
 
-  useEffect(() => {
-    console.log(content);
-  }, [content]);
+  const handleSave = async () => {
+    try {
+      if (!content) {
+        showToast("Empty note discarded");
+        return;
+      }
+      if (!note) {
+        let _n = new RichNote(-1, content, getContentCSS(), 0, 0);
+        await richNoteController.createNote(_n);
+        showToast("Note created");
+        return;
+      }
 
-  const handleSaveButtonClick = () => {
-    // Save the HTML content to your server or local storage
-    console.log("Content:", content);
+      let _n: RichNote = note;
+      _n.setContent(content);
+      _n.setCss(getContentCSS());
+      await richNoteController.updateNote(_n);
+      showToast("Note updated");
+      return;
+    } catch (error) {
+      console.error(error);
+      showToast("Something went wrong");
+    } finally {
+      Keyboard.dismiss();
+    }
   };
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      header: () => (
+        <Appbar.Header>
+          <Appbar.BackAction onPress={() => navigation.goBack()} />
+          <Appbar.Content title={"Edit"} />
+          {/* <Appbar.Action icon="note-edit-outline" onPress={() => {}} />
+          <Appbar.Action icon="dots-vertical" onPress={() => {}} /> */}
+        </Appbar.Header>
+      ),
+    });
+
+    const unsubscribe = navigation.addListener("beforeRemove", () => {
+      handleSave();
+    });
+    return unsubscribe; // Cleanup function to remove the listener
+  }, [navigation, content, note]);
 
   const handleCursorPosition = useCallback((scrollY: number) => {
     // Positioning scroll bar
     scrollRef.current!.scrollTo({ y: scrollY - 30, animated: true });
-  }, []);
-
-  const handleFontSize = useCallback(() => {
-    // console.log("font");
-    // 1=  10px, 2 = 13px, 3 = 16px, 4 = 18px, 5 = 24px, 6 = 32px, 7 = 48px;
-    let size = [1, 2, 3, 4, 5, 6, 7];
-    editor.current?.setFontSize(3 as FONT_SIZE);
   }, []);
 
   const onLinkDone = useCallback(
@@ -218,15 +267,21 @@ const RichTextEditorTest = () => {
         nestedScrollEnabled={true}
         scrollEventThrottle={20}
       >
-        <RichEditor
-          ref={editor}
-          initialContentHTML={INITIAL_CONTENT}
-          onLink={() => console.log("clicked")}
-          onChange={handleContentChange}
-          onCursorPosition={handleCursorPosition}
-        />
-        {renderToolBar()}
-        <Button title="Save" onPress={handleSaveButtonClick} />
+        {isLoading ? (
+          <Text>Loading...</Text>
+        ) : (
+          <>
+            <RichEditor
+              ref={editor}
+              initialFocus={true}
+              initialContentHTML={note?.getContent()}
+              onLink={() => console.log("clicked")}
+              onChange={handleContentChange}
+              onCursorPosition={handleCursorPosition}
+            />
+            {renderToolBar()}
+          </>
+        )}
         <Button title="Color" onPress={openColorPickerModal} />
         <Button title="Link" onPress={openLinkPickerModal} />
 
@@ -241,23 +296,9 @@ const RichTextEditorTest = () => {
         >
           <Text>Test</Text>
         </Modal>
-        {/* <Text style={{ margin: 10, fontSize: 16 }}>Rendered HTML:</Text>
-        <Text style={{ padding: 10, backgroundColor: "#ddd" }}>{content}</Text> */}
       </ScrollView>
-      <WebView
-        useWebKit={true}
-        scrollEnabled={false}
-        hideKeyboardAccessoryView={true}
-        keyboardDisplayRequiresUserAction={false}
-        originWhitelist={["*"]}
-        dataDetectorTypes={"none"}
-        domStorageEnabled={false}
-        bounces={false}
-        javaScriptEnabled={true}
-        source={{ content }}
-      />
     </SafeAreaView>
   );
 };
 
-export default RichTextEditorTest;
+export default Editor;

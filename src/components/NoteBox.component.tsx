@@ -3,9 +3,11 @@ import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Avatar, Button, Card, Text, useTheme } from "react-native-paper";
 import Note from "../types/Note.type";
+import RichNote from "../types/Note.type";
+import { convert } from "html-to-text";
 
 type NoteBoxProps = {
-  note: Note;
+  note: RichNote;
   onPress?: () => void;
   onLongPress?: () => void;
   disabled?: boolean;
@@ -29,8 +31,8 @@ const NoteBox: React.FC<NoteBoxProps> = ({
         theme={{ colors: { outline: "lightgray" } }}
       >
         <Card.Title
-          title={note.getTitle()}
-          subtitle={note.getText()}
+          title={""}
+          subtitle={convert(note.getContent())}
           titleVariant={"titleMedium"}
           subtitleNumberOfLines={5}
         />

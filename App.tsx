@@ -13,14 +13,13 @@ import {
 } from "react-native-paper";
 import HomeScreen from "./src/screens/Home.screen";
 import noteController from "./src/controllers/Note.controller";
-import NoteBlock from "./src/screens/NoteBlock.screen";
 import { Image, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AgreementScreen from "./src/screens/Agreement.screen";
 import { RootStackParamList } from "./src/types/Routes.type";
 import * as SplashScreen from "expo-splash-screen";
 
-import RichTextEditorTest from "./src/screens/Rich.screen";
+import Editor from "./src/screens/Rich.screen";
 import { RichEditorScreen } from "./src/screens/RichTextEditor";
 import { Preview } from "./src/screens/Preview.screen";
 
@@ -29,6 +28,8 @@ import {
   MaterialCommunityIcons,
   MaterialIcons,
 } from "@expo/vector-icons";
+import richNoteController from "./src/controllers/Note.controller";
+import RichNote from "./src/types/Note.type";
 
 // Define the theme for PaperProvider
 const theme = {
@@ -47,7 +48,7 @@ export default function App() {
     try {
       await SplashScreen.preventAutoHideAsync(); // Prevent auto hiding of splash screen
       await checkAgreement();
-      await noteController.initializeDatabase();
+      await richNoteController.initializeDatabase();
     } catch (error) {
       console.error("Error initializing", error);
     } finally {
@@ -73,7 +74,7 @@ export default function App() {
     <PaperProvider theme={theme}>
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName={showAgreement ? "Agreement" : "Rich"}
+          initialRouteName={showAgreement ? "Agreement" : "Home"}
           screenOptions={{
             title: "Notes",
             // header: (props) => (
@@ -94,16 +95,9 @@ export default function App() {
             <></>
           )}
           <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen
-            name="NoteBlock"
-            component={NoteBlock}
-            options={() => ({
-              title: "",
-            })}
-          />
-          <Stack.Screen name="Rich" component={RichEditorScreen} />
+          {/* <Stack.Screen name="Rich" component={RichEditorScreen} /> */}
           <Stack.Screen name="Preview" component={Preview} />
-          {/* <Stack.Screen name="Rich" component={RichTextEditorTest} /> */}
+          <Stack.Screen name="Edit" component={Editor} />
         </Stack.Navigator>
       </NavigationContainer>
       <StatusBar style="auto" />

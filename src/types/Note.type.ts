@@ -1,7 +1,7 @@
-export default class Note {
+export default class RichNote {
   private id: number;
-  private title: string;
-  private text: string;
+  private content: string;
+  private css: string;
   private createdAt: number;
   private updatedAt: number;
 
@@ -13,20 +13,20 @@ export default class Note {
     this.id = id;
   }
 
-  public getTitle(): string {
-    return this.title;
+  public getContent(): string {
+    return this.content;
   }
 
-  public setTitle(title: string): void {
-    this.title = title;
+  public setContent(Content: string): void {
+    this.content = Content;
   }
 
-  public getText(): string {
-    return this.text;
+  public getCss(): string {
+    return this.css;
   }
 
-  public setText(text: string): void {
-    this.text = text;
+  public setCss(css: string): void {
+    this.css = css;
   }
 
   public getCreatedAt(): number {
@@ -47,14 +47,14 @@ export default class Note {
 
   constructor(
     id: number,
-    title: string,
-    text: string,
+    content: string,
+    css: string,
     createdAt: number,
     updatedAt: number
   ) {
     this.id = id;
-    this.title = title;
-    this.text = text;
+    this.content = content;
+    this.css = css;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }
