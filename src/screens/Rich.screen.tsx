@@ -15,6 +15,9 @@ import {
   Keyboard,
   View,
   ToastAndroid,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { Appbar, IconButton } from "react-native-paper";
@@ -37,8 +40,8 @@ import RichNote from "../types/Note.type";
 import richNoteController from "../controllers/Note.controller";
 
 enum ToolBars {
-  default,
-  fontBar,
+  textBar,
+  formatTitleBar,
 }
 
 interface MenuIconProps {
@@ -59,7 +62,7 @@ const MenuIcon: React.FC<MenuIconProps> = ({ icon, size, color }) => {
 const Editor: React.FC<IProps> = ({ route, navigation }) => {
   const [content, setContent] = useState("");
   const [currentToolBar, setCurrentToolBar] = useState<ToolBars>(
-    ToolBars.default
+    ToolBars.textBar
   );
   const [note, setNote] = useState<RichNote | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -85,8 +88,6 @@ const Editor: React.FC<IProps> = ({ route, navigation }) => {
   const [linkPickerModalVisible, setLinkPickerModalVisible] =
     useState<boolean>(false);
 
-  const [selectedColor, setSelectedColor] = useState<string>("#000000");
-
   const openColorPickerModal = () => setColorPickerModalVisible(true);
   const closeColorPickerModal = () => setColorPickerModalVisible(false);
 
@@ -94,7 +95,7 @@ const Editor: React.FC<IProps> = ({ route, navigation }) => {
   const closeLinkPickerModal = () => setLinkPickerModalVisible(false);
 
   const handleColorSelect = (color: string) => {
-    setSelectedColor(color);
+    editor.current?.setForeColor(color);
     closeColorPickerModal(); // Close the modal after selecting the color
   };
 
@@ -174,6 +175,10 @@ const Editor: React.FC<IProps> = ({ route, navigation }) => {
     scrollRef.current!.scrollTo({ y: scrollY - 30, animated: true });
   }, []);
 
+  const handleForeColor = useCallback(() => {
+    openColorPickerModal();
+  }, []);
+
   const onLinkDone = useCallback(
     ({ title, url }: { title?: string; url?: string }) => {
       if (title && url) {
@@ -185,36 +190,95 @@ const Editor: React.FC<IProps> = ({ route, navigation }) => {
 
   const renderToolBar = () => {
     switch (currentToolBar) {
-      case ToolBars.default:
+      // case ToolBars.default:
+      //   return (
+      //     <RichToolbar
+      //       style={styles.richBar}
+      //       flatContainerStyle={styles.flatStyle}
+      //       selectedIconTint={"#2095F2"}
+      //       disabledIconTint={"#bfbfbf"}
+      //       editor={editor}
+      //       actions={[actions.keyboard, "fontMenu"]}
+      //       iconMap={{
+      //         [actions.keyboard]: ({ tintColor }: IconRecord) => (
+      //           <MenuIcon icon={"keyboard-outline"} color={tintColor} />
+      //         ),
+      //         fontMenu: ({ tintColor }: IconRecord) => (
+      //           <Text
+      //             style={[styles.tib, { color: tintColor, fontWeight: "bold" }]}
+      //           >
+      //             Aa
+      //           </Text>
+      //         ),
+      //       }}
+      //       fontMenu={() => setCurrentToolBar(ToolBars.textBar)}
+      //     />
+      //   );
+      case ToolBars.textBar:
         return (
           <RichToolbar
+            style={styles.richBar}
+            flatContainerStyle={styles.flatStyle}
+            selectedIconTint={"#2095F2"}
+            disabledIconTint={"#bfbfbf"}
             editor={editor}
-            actions={[actions.keyboard, "fontMenu"]}
+            actions={[
+              "formatTitle",
+              actions.setBold,
+              actions.setItalic,
+              actions.setUnderline,
+              actions.setStrikethrough,
+              actions.removeFormat,
+              actions.setSuperscript,
+              actions.setSubscript,
+              actions.foreColor,
+            ]}
             iconMap={{
-              [actions.keyboard]: ({ tintColor }: IconRecord) => (
-                <MenuIcon icon={"keyboard-outline"} color={tintColor} />
+              formatTitle: ({ tintColor }: IconRecord) => (
+                <MenuIcon icon={"format-title"} color={tintColor} />
               ),
-              fontMenu: ({ tintColor }: IconRecord) => (
-                <MenuIcon color={tintColor} icon={"format-font"} />
+              [actions.setBold]: ({ tintColor }: IconRecord) => (
+                <MenuIcon icon={"format-bold"} color={tintColor} />
+              ),
+              [actions.setItalic]: ({ tintColor }: IconRecord) => (
+                <MenuIcon icon={"format-italic"} color={tintColor} />
+              ),
+              [actions.setUnderline]: ({ tintColor }: IconRecord) => (
+                <MenuIcon icon={"format-underline"} color={tintColor} />
+              ),
+              [actions.setStrikethrough]: ({ tintColor }: IconRecord) => (
+                <MenuIcon icon={"format-strikethrough"} color={tintColor} />
+              ),
+              [actions.foreColor]: ({ tintColor }: IconRecord) => (
+                <MenuIcon icon={"palette-outline"} color={tintColor} />
+              ),
+              [actions.removeFormat]: ({ tintColor }: IconRecord) => (
+                <MenuIcon icon={"format-clear"} color={tintColor} />
+              ),
+              close: ({ tintColor }: IconRecord) => (
+                <MenuIcon icon={"close"} color={tintColor} />
               ),
             }}
-            fontMenu={() => setCurrentToolBar(ToolBars.fontBar)}
+            formatTitle={() => setCurrentToolBar(ToolBars.formatTitleBar)}
+            foreColor={handleForeColor}
           />
         );
-      case ToolBars.fontBar:
+      case ToolBars.formatTitleBar:
         return (
           <RichToolbar
+            style={styles.richBar}
+            flatContainerStyle={styles.flatStyle}
+            selectedIconTint={"#2095F2"}
+            disabledIconTint={"#bfbfbf"}
             editor={editor}
             actions={[
               actions.heading1,
               actions.heading2,
               actions.heading3,
+              actions.heading4,
+              actions.heading5,
+              actions.heading6,
               actions.setParagraph,
-              actions.setBold,
-              actions.setItalic,
-              actions.setUnderline,
-              actions.removeFormat,
-              actions.setTextColor,
               "close",
             ]}
             iconMap={{
@@ -227,30 +291,23 @@ const Editor: React.FC<IProps> = ({ route, navigation }) => {
               [actions.heading3]: ({ tintColor }: IconRecord) => (
                 <MenuIcon icon={"format-header-3"} color={tintColor} />
               ),
-
+              [actions.heading4]: ({ tintColor }: IconRecord) => (
+                <MenuIcon icon={"format-header-4"} color={tintColor} />
+              ),
+              [actions.heading5]: ({ tintColor }: IconRecord) => (
+                <MenuIcon icon={"format-header-5"} color={tintColor} />
+              ),
+              [actions.heading6]: ({ tintColor }: IconRecord) => (
+                <MenuIcon icon={"format-header-6"} color={tintColor} />
+              ),
               [actions.setParagraph]: ({ tintColor }: IconRecord) => (
                 <MenuIcon icon={"format-paragraph"} color={tintColor} />
-              ),
-              [actions.setBold]: ({ tintColor }: IconRecord) => (
-                <MenuIcon icon={"format-bold"} color={tintColor} />
-              ),
-              [actions.setItalic]: ({ tintColor }: IconRecord) => (
-                <MenuIcon icon={"format-italic"} color={tintColor} />
-              ),
-              [actions.setUnderline]: ({ tintColor }: IconRecord) => (
-                <MenuIcon icon={"format-underline"} color={tintColor} />
-              ),
-              [actions.setTextColor]: ({ tintColor }: IconRecord) => (
-                <MenuIcon icon={"palette-outline"} color={tintColor} />
-              ),
-              [actions.removeFormat]: ({ tintColor }: IconRecord) => (
-                <MenuIcon icon={"format-clear"} color={tintColor} />
               ),
               close: ({ tintColor }: IconRecord) => (
                 <MenuIcon icon={"close"} color={tintColor} />
               ),
             }}
-            close={() => setCurrentToolBar(ToolBars.default)}
+            close={() => setCurrentToolBar(ToolBars.textBar)}
           />
         );
       default:
@@ -259,9 +316,17 @@ const Editor: React.FC<IProps> = ({ route, navigation }) => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={styles.container}>
+      <ColorPickerModal
+        visible={colorPickerModalVisible}
+        onSelect={handleColorSelect}
+        onDismiss={closeColorPickerModal}
+      />
+      <Modal visible={linkPickerModalVisible} onDismiss={closeLinkPickerModal}>
+        <Text>Test</Text>
+      </Modal>
       <ScrollView
-        // style={[styles.scroll, dark && styles.scrollDark]}
+        style={[styles.scroll]}
         keyboardDismissMode={"none"}
         ref={scrollRef}
         nestedScrollEnabled={true}
@@ -271,34 +336,143 @@ const Editor: React.FC<IProps> = ({ route, navigation }) => {
           <Text>Loading...</Text>
         ) : (
           <>
+            <RichToolbar
+              style={[styles.richBar]}
+              flatContainerStyle={styles.flatStyle}
+              editor={editor}
+              // disabled={disabled}
+              // iconTint={color}
+              selectedIconTint={"#2095F2"}
+              disabledIconTint={"#bfbfbf"}
+              // onPressAddImage={onPressAddImage}
+              // onInsertLink={onInsertLink}
+              // iconSize={24}
+              // iconGap={10}
+              actions={[
+                actions.undo,
+                actions.redo,
+                actions.alignLeft,
+                actions.alignCenter,
+                actions.alignRight,
+                actions.insertOrderedList,
+                actions.insertBulletsList,
+                actions.checkboxList,
+                actions.outdent,
+                actions.indent,
+                // actions.insertVideo,
+                // actions.insertImage,
+                // actions.insertLink,
+                actions.blockquote,
+                actions.code,
+                actions.line,
+              ]} // default defaultActions
+              iconMap={{
+                [actions.undo]: ({ tintColor }: IconRecord) => (
+                  <MenuIcon icon={"undo"} color={tintColor} />
+                ),
+                [actions.redo]: ({ tintColor }: IconRecord) => (
+                  <MenuIcon icon={"redo"} color={tintColor} />
+                ),
+                [actions.alignLeft]: ({ tintColor }: IconRecord) => (
+                  <MenuIcon icon={"format-align-left"} color={tintColor} />
+                ),
+                [actions.alignCenter]: ({ tintColor }: IconRecord) => (
+                  <MenuIcon icon={"format-align-center"} color={tintColor} />
+                ),
+                [actions.alignRight]: ({ tintColor }: IconRecord) => (
+                  <MenuIcon icon={"format-align-right"} color={tintColor} />
+                ),
+                [actions.insertOrderedList]: ({ tintColor }: IconRecord) => (
+                  <MenuIcon icon={"format-list-numbered"} color={tintColor} />
+                ),
+                [actions.insertBulletsList]: ({ tintColor }: IconRecord) => (
+                  <MenuIcon icon={"format-list-bulleted"} color={tintColor} />
+                ),
+                [actions.checkboxList]: ({ tintColor }: IconRecord) => (
+                  <MenuIcon icon={"format-list-checkbox"} color={tintColor} />
+                ),
+                [actions.indent]: ({ tintColor }: IconRecord) => (
+                  <MenuIcon icon={"format-indent-increase"} color={tintColor} />
+                ),
+                [actions.outdent]: ({ tintColor }: IconRecord) => (
+                  <MenuIcon icon={"format-indent-decrease"} color={tintColor} />
+                ),
+                [actions.insertImage]: ({ tintColor }: IconRecord) => (
+                  <MenuIcon icon={"image"} color={tintColor} />
+                ),
+                [actions.insertVideo]: ({ tintColor }: IconRecord) => (
+                  <MenuIcon icon={"video"} color={tintColor} />
+                ),
+                [actions.insertLink]: ({ tintColor }: IconRecord) => (
+                  <MenuIcon icon={"link"} color={tintColor} />
+                ),
+                [actions.blockquote]: ({ tintColor }: IconRecord) => (
+                  <MenuIcon
+                    icon={"format-quote-open-outline"}
+                    color={tintColor}
+                  />
+                ),
+                [actions.code]: ({ tintColor }: IconRecord) => (
+                  <MenuIcon icon={"code-tags"} color={tintColor} />
+                ),
+              }}
+              // insertVideo={handleInsertVideo}
+              // fontSize={handleFontSize}
+              // foreColor={handleForeColor}
+              // hiliteColor={handleHaliteColor}
+            />
             <RichEditor
               ref={editor}
-              initialFocus={true}
+              initialFocus={false}
+              firstFocusEnd={false}
+              style={styles.rich}
+              useContainer={true}
+              initialHeight={400}
+              enterKeyHint={"done"}
+              placeholder={"Write your note here"}
               initialContentHTML={note?.getContent()}
+              pasteAsPlainText={true}
               onLink={() => console.log("clicked")}
               onChange={handleContentChange}
               onCursorPosition={handleCursorPosition}
             />
-            {renderToolBar()}
           </>
         )}
-        <Button title="Color" onPress={openColorPickerModal} />
-        <Button title="Link" onPress={openLinkPickerModal} />
-
-        <ColorPickerModal
-          visible={colorPickerModalVisible}
-          onSelect={handleColorSelect}
-          onDismiss={closeColorPickerModal}
-        />
-        <Modal
-          visible={linkPickerModalVisible}
-          onDismiss={closeLinkPickerModal}
-        >
-          <Text>Test</Text>
-        </Modal>
       </ScrollView>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        {isLoading ? <></> : <>{renderToolBar()}</>}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  scroll: {
+    backgroundColor: "#fff",
+  },
+  richBar: {
+    borderColor: "#efefef",
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  flatStyle: {
+    paddingHorizontal: 12,
+  },
+  rich: {
+    minHeight: 300,
+    flex: 1,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: "#e3e3e3",
+  },
+  tib: {
+    textAlign: "center",
+    color: "#515156",
+  },
+});
 
 export default Editor;
